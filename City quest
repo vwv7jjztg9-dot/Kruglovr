@@ -31,3 +31,4 @@ function paywall(){shell(`<div class="eyebrow">Ты прошёл бесплат�
 function unlock(){s.paid=true;save();renderMap()}
 function render(){if(s.mission>=10)return renderMission();home()}render();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+const CACHE="cq-v02";const A=["./","./index.html","./styles.css","./app.js","./manifest.webmanifest","./icon.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(A))));self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(x=>x||fetch(e.request))));
