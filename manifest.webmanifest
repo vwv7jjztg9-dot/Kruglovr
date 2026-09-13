@@ -3,8 +3,7 @@
   "short_name": "CITY QUEST",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#0b1020",
-  "lang": "ru",
-  "description": "Пеший квест по исторической Москве"
+  "background_color": "#080c18",
+  "theme_color": "#080c18",
+  "lang": "ru"
 }

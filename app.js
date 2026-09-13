@@ -1,164 +1,37 @@
-const M=[
-{id:1,title:"Начало охоты",place:"Красная площадь",lat:55.7539,lng:37.6208,xp:50,story:"Добро пожаловать в Москву, которой больше не видно с первого взгляда. Сегодня тебе предстоит найти 10 следов прошлого.",task:"Найди глазами объект на площади, который видел Москву задолго до большинства современных зданий.",kind:"observe"},
-{id:2,title:"Посмотри вверх",place:"Варварка",lat:55.7522,lng:37.6258,xp:100,story:"Улица получила своё название от храма Святой Варвары.",task:"Почему улица называется Варваркой?",kind:"quiz",answers:["В честь варягов","В честь Святой Варвары","Это была дорога варягов"],correct:1},
-{id:3,title:"След иностранцев",place:"Старый Английский двор",lat:55.7520,lng:37.6267,xp:200,story:"Здесь Москва встречалась с иностранным торговым миром.",task:"Какую роль Старый Английский двор играл в истории Москвы?",kind:"quiz",answers:["Военную крепость","Торговое представительство","Царскую резиденцию","Религиозный центр"],correct:1,secret:true},
-{id:4,title:"Дом, из которого вышла династия",place:"Палаты бояр Романовых",lat:55.7526,lng:37.6270,xp:100,story:"С этим местом связана история рода Романовых.",task:"Как звали первого царя из династии Романовых?",kind:"quiz",answers:["Иван","Алексей","Михаил","Фёдор"],correct:2},
-{id:5,title:"Найди лишнее",place:"Знаменский монастырь",lat:55.7530,lng:37.6264,xp:75,story:"Перед тобой ансамбль зданий разных эпох.",task:"Найди на месте деталь, которая визуально выбивается по эпохе.",kind:"observe"},
-{id:6,title:"Город, которого больше нет",place:"Зарядье",lat:55.7521,lng:37.6285,xp:100,story:"До современного парка здесь существовал старый городской район, а в XX веке стояла гостиница «Россия».",task:"Что находилось здесь до современного парка?",kind:"quiz",answers:["Огромный рынок","Гостиница «Россия»","Императорский дворец"],correct:1},
-{id:7,title:"Поймай три эпохи",place:"Парящий мост",lat:55.7508,lng:37.6250,xp:100,story:"Теперь ты смотришь на Москву сразу в нескольких временных слоях.",task:"Найди Кремль, Москву-реку и современную Москву. Нажми «Нашёл всё».",kind:"observe"},
-{id:8,title:"Найди исчезнувшую Москву",place:"Китайгородская стена",lat:55.7557,lng:37.6274,xp:125,story:"Стена Китай-города была построена в 1535–1538 годах.",task:"Сопоставь современную карту с исторической линией стены.",kind:"observe"},
-{id:9,title:"Анна в Углу",place:"Церковь Анны в Углу",lat:55.7547,lng:37.6286,xp:100,story:"Название храма связано с его положением у угла старой линии укреплений Китай-города.",task:"Почему храм называется «Анна в Углу»?",kind:"quiz",answers:["Из-за имени основателя","Из-за положения у угла стены","Из-за формы купола"],correct:1,secret:true},
-{id:10,title:"Охотник за Москвой",place:"Финал",lat:55.7547,lng:37.6286,xp:150,story:"Ты прошёл маршрут и увидел Москву сразу в нескольких эпохах.",task:"Охота завершена.",kind:"finish"}
-];
-
-const DEFAULT={mission:0,xp:0,secrets:0,paid:false};
-let s=loadState();
-let user=null,map=null,userMarker=null;
-const app=document.getElementById("app");
-
-function loadState(){
-  try{return {...DEFAULT,...JSON.parse(localStorage.getItem("cq02")||"{}")}}
-  catch(e){return {...DEFAULT}}
-}
-function save(){localStorage.setItem("cq02",JSON.stringify(s))}
-function resetProgress(){
-  if(confirm("Сбросить весь прогресс?")){
-    s={...DEFAULT}; save(); render();
-  }
-}
-function shell(c){
-  app.innerHTML=`<main class="shell">
-    <header class="top"><div class="brand">CITY QUEST</div><div class="xp">${s.xp} XP</div></header>
-    ${c}
-    <footer class="footer">CITY QUEST · MVP v0.2</footer>
-  </main>`;
-}
-function home(){
-  shell(`<section class="hero">
-    <div class="eyebrow">ПЕРВАЯ ОХОТА</div>
-    <h1>Тайны<br>старой Москвы</h1>
-    <p class="lead">Пеший квест по историческому центру: карта, GPS, истории, загадки, секреты и XP.</p>
-    <div class="card">
-      <div class="cover"><span>МОСКВА</span><b>10</b><small>МИССИЙ</small></div>
-      <div class="meta"><span class="pill">🚶 ~4 км</span><span class="pill">⏱ 1,5–2 часа</span><span class="pill">🔎 2 секрета</span></div>
-      <button class="primary" onclick="start()">Начать охоту</button>
-      <button class="link-btn" onclick="showAbout()">Как это работает</button>
-    </div>
-  </section>`);
-}
-function showAbout(){
-  shell(`<div class="eyebrow">CITY QUEST</div><h1>Как это работает</h1>
-  <div class="card">
-    <div class="step"><b>1. Иди к точке</b><span>Карта показывает следующий объект.</span></div>
-    <div class="step"><b>2. Читай и ищи</b><span>Короткая история + задание на месте.</span></div>
-    <div class="step"><b>3. Собирай XP</b><span>Правильные ответы и найденные детали дают очки.</span></div>
-    <div class="step"><b>4. Открой полный маршрут</b><span>Первые 3 миссии бесплатны, дальше — полный квест.</span></div>
-    <button class="primary" onclick="home()">Назад</button>
-  </div>`);
-}
-function start(){s={...DEFAULT};save();renderMap()}
-function renderMap(){
-  if(s.mission>=10){renderMission();return}
-  const m=M[s.mission];
-  shell(`<div class="eyebrow">МАРШРУТ · ${s.mission+1}/10</div>
-    <h2>Тайны старой Москвы</h2>
-    <div id="map" class="map"></div>
-    <div class="map-note">📍 Золотые точки — миссии. GPS включается только после твоего разрешения.</div>
-    <div class="card">
-      <div class="eyebrow">СЛЕДУЮЩАЯ ТОЧКА</div>
-      <h3>${m.place}</h3>
-      <p>${distanceText()}</p>
-      <button class="primary" onclick="openNext()">Открыть миссию</button>
-      <button class="secondary" onclick="locate()">Определить моё местоположение</button>
-      <button class="link-btn" onclick="resetProgress()">Сбросить прогресс</button>
-    </div>`);
-  initMap();
-}
-function initMap(){
-  if(!window.L)return;
-  map=L.map("map").setView([55.7539,37.6258],15);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors"}).addTo(map);
-  M.forEach((m,i)=>{
-    if(i<=Math.min(s.mission+1,9)){
-      const marker=L.marker([m.lat,m.lng]).addTo(map);
-      marker.bindPopup(`<b>${m.id}. ${m.place}</b>`);
-    }
-  });
-  if(user) userMarker=L.marker([user.lat,user.lng]).addTo(map).bindPopup("Ты здесь");
-}
-function locate(){
-  if(!navigator.geolocation){alert("Геолокация не поддерживается этим браузером.");return}
-  navigator.geolocation.getCurrentPosition(
-    p=>{user={lat:p.coords.latitude,lng:p.coords.longitude};renderMap()},
-    ()=>alert("Не удалось получить GPS. Проверь разрешение браузера."),
-    {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
-  );
-}
-function distanceText(){
-  if(!user)return "Разреши GPS, чтобы увидеть расстояние до точки.";
-  const d=dist(user.lat,user.lng,M[s.mission].lat,M[s.mission].lng);
-  return d<1?`До точки примерно ${Math.round(d*1000)} м.`:`До точки примерно ${d.toFixed(1)} км.`;
-}
-function dist(a,b,c,d){
-  const R=6371,rad=x=>x*Math.PI/180,x=rad(c-a),y=rad(d-b);
-  const q=Math.sin(x/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(y/2)**2;
-  return 2*R*Math.asin(Math.sqrt(q));
-}
-function openNext(){
-  if(s.mission>=3&&!s.paid)return paywall();
-  renderMission();
-}
-function renderMission(){
-  const m=M[s.mission];
-  if(!m)return renderMap();
-  let c=`<div class="eyebrow">МИССИЯ ${m.id}/10 · ${m.place}</div>
-    <h1 class="mission-title">${m.title}</h1>
-    <div class="progress"><i style="width:${m.id*10}%"></i></div>
-    <div class="card">
-      <p class="story">${m.story}</p>
-      <p class="question">${m.task}</p>`;
-  if(m.kind==="quiz"){
-    c+=`<div class="answers">${m.answers.map((a,i)=>`<button class="answer" onclick="answer(${i})">${String.fromCharCode(65+i)} — ${a}</button>`).join("")}</div>`;
-  }else if(m.kind==="finish"){
-    c+=`<div class="reward"><div class="big">🏆</div><h2>ОХОТНИК ЗА МОСКВОЙ</h2><p>10/10 миссий · ${s.secrets}/2 секрета · ${s.xp} XP</p></div>`;
-  }else{
-    c+=`<button class="primary" onclick="complete()">Нашёл / Готово</button>`;
-  }
-  c+=`</div><button class="secondary" onclick="renderMap()">К карте</button>`;
-  shell(c);
-}
-function answer(i){
-  if(i!==M[s.mission].correct){alert("Не угадал. Попробуй ещё раз.");return}
-  complete();
-}
-function complete(){
-  const m=M[s.mission];
-  if(!m)return;
-  s.xp+=m.xp;
-  if(m.secret)s.secrets++;
-  s.mission++;
-  save();
-  if(s.mission===3)return paywall();
-  if(s.mission>=10)return renderMission();
-  renderMap();
-}
-function paywall(){
-  shell(`<div class="eyebrow">ТЫ ПРОШЁЛ БЕСПЛАТНУЮ ЧАСТЬ</div>
-    <h1>3/10</h1>
-    <p class="lead">Ты уже собрал <b>${s.xp} XP</b>. Открой ещё 7 миссий и доберись до финала.</p>
-    <div class="card paywall">
-      <div class="eyebrow">ПОЛНЫЙ МАРШРУТ</div>
-      <div class="price">249 ₽</div>
-      <p>7 миссий · 2 секрета · финальный achievement</p>
-      <button class="primary" onclick="unlock()">Открыть маршрут</button>
-      <p class="tiny">В MVP кнопка открывает доступ без реальной оплаты. Платёж подключим следующим этапом.</p>
-    </div>
-    <button class="secondary" onclick="renderMap()">Назад</button>`);
-}
-function unlock(){s.paid=true;save();renderMap()}
-function render(){
-  if(s.mission>=10)return renderMission();
-  home();
-}
-render();
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+const Q=[
+{id:1,t:"Начало охоты",p:"Красная площадь",lat:55.7539,lng:37.6208,x:50,s:"Начинаем там, где Москва чаще всего оказывается на открытках. Сегодня задача — смотреть не на открытку, а на детали.",q:"Осмотрись вокруг и найди деталь, которая выглядит старше окружающего пространства.",k:"obs",img:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Red%20Square%20in%20Moscow%2002.jpg"},
+{id:2,t:"Посмотри вверх",p:"Варварка",lat:55.7522,lng:37.6258,x:100,s:"Варварка — одна из старейших улиц Москвы. Её название связано с церковью Святой Варвары.",q:"Почему улица называется Варваркой?",k:"quiz",a:["В честь варягов","В честь Святой Варвары","Так называли торговцев"],c:1},
+{id:3,t:"След иностранцев",p:"Старый Английский двор",lat:55.7520,lng:37.6267,x:200,s:"В этих палатах находилось английское торговое представительство. Представь Москву XVI века: здесь пересекались местные купцы и иностранные торговцы.",q:"Какую роль Старый Английский двор играл в истории Москвы?",k:"quiz",a:["Военную крепость","Торговое представительство","Царскую резиденцию","Монастырь"],c:1,secret:1,img:"https://commons.wikimedia.org/wiki/Special:Redirect/file/7079.2._%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0._%D0%A1%D1%82%D0%B0%D1%80%D1%8B%D0%B9_%D0%90%D0%BD%D0%B3%D0%BB%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%B4%D0%B2%D0%BE%D1%80.jpg"},
+{id:4,t:"Дом, из которого вышла династия",p:"Палаты бояр Романовых",lat:55.7526,lng:37.6270,x:100,s:"С этим местом связан род Романовых. Здесь особенно легко представить, насколько тесным был средневековый город.",q:"Как звали первого царя из династии Романовых?",k:"quiz",a:["Иван","Алексей","Михаил","Фёдор"],c:2,img:"https://commons.wikimedia.org/wiki/Special:Redirect/file/7032.2._Moscow._Varvarka_Street%2C_10_building_1.jpg"},
+{id:5,t:"Найди лишнее",p:"Знаменский монастырь",lat:55.7530,lng:37.6264,x:75,s:"Перед тобой ансамбль, где разные эпохи буквально стоят рядом.",q:"Найди архитектурную деталь, которая визуально выбивается из общего ансамбля.",k:"obs"},
+{id:6,t:"Город, которого больше нет",p:"Зарядье",lat:55.7521,lng:37.6285,x:100,s:"Здесь когда-то был старый городской район, затем появилась гостиница «Россия», а сегодня — парк.",q:"Что находилось здесь до современного парка?",k:"quiz",a:["Гостиница «Россия»","Царский ипподром","Главный вокзал"],c:0},
+{id:7,t:"Поймай три эпохи",p:"Парящий мост",lat:55.7508,lng:37.6250,x:100,s:"С высоты видно сразу несколько слоёв Москвы.",q:"Найди Кремль, Москву-реку и современную панораму. Затем нажми «Нашёл всё».",k:"obs"},
+{id:8,t:"Найди исчезнувшую Москву",p:"Китайгородская стена",lat:55.7557,lng:37.6274,x:125,s:"Китайгородская стена была построена в 1535–1538 годах. Сегодня сохранились лишь отдельные фрагменты.",q:"Найди сохранившийся фрагмент стены и сравни его масштаб с современным городом.",k:"obs"},
+{id:9,t:"Анна в Углу",p:"Церковь Анны в Углу",lat:55.7547,lng:37.6286,x:100,s:"Название храма связано с его положением у угла старой линии укреплений Китай-города.",q:"Почему храм называют «Анна в Углу»?",k:"quiz",a:["Из-за имени основателя","Из-за положения у угла стены","Из-за формы купола"],c:1,secret:1},
+{id:10,t:"Охотник за Москвой",p:"Финал",lat:55.7547,lng:37.6286,x:150,s:"Ты прошёл маршрут и собрал собственную карту памяти старой Москвы.",q:"Охота завершена.",k:"finish"}];
+let S=load(),me=null,map=null,promptEvent=null;
+const D={m:0,x:0,sec:0,paid:false};
+function load(){try{return {...D,...JSON.parse(localStorage.getItem("cq03")||"{}")}}catch(e){return {...D}}}
+function save(){localStorage.setItem("cq03",JSON.stringify(S))}
+function shell(c){app.innerHTML=`<main><header><b>CITY QUEST</b><span>${S.x} XP</span></header>${c}<footer>CITY QUEST · v0.3</footer></main>`}
+function toast(t){let z=document.getElementById("toast");z.textContent=t;z.className="show";setTimeout(()=>z.className="",1800)}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();promptEvent=e});
+async function install(){if(promptEvent){promptEvent.prompt();promptEvent=null}}
+function home(){shell(`<section class="hero"><small>ПЕРВАЯ ОХОТА</small><h1>Тайны<br>старой Москвы</h1><p>Пеший квест, который превращает прогулку в охоту за историей.</p><div class="card"><div class="cover"><b>10</b><span>МИССИЙ</span></div><div class="chips"><i>🚶 ~4 км</i><i>⏱ 1,5–2 часа</i><i>🔎 2 секрета</i></div><button onclick="start()">Начать охоту</button><button class="dark" onclick="about()">Как это работает</button>${promptEvent?'<button class="dark" onclick="install()">📱 Установить</button>':''}</div></section>`)}
+function about(){shell(`<small>CITY QUEST</small><h1>Прогулка<br>как игра.</h1><div class="card"><p>📍 Иди к точке — карта и GPS.</p><p>👀 Смотри вокруг — задания на месте.</p><p>🧠 Разгадывай — вопросы и секреты.</p><p>🏆 Собирай XP — финальный результат.</p><button onclick="home()">Назад</button></div>`)}
+function start(){S={...D};save();route()}
+function route(){if(S.m>=10)return finish();let q=Q[S.m];shell(`<small>МАРШРУТ · ${q.id}/10</small><h2>Тайны старой Москвы</h2><div id="map"></div><p id="distance">${distance()}</p><div class="card"><small>СЛЕДУЮЩАЯ ТОЧКА</small><h3>${q.p}</h3><button onclick="mission()">Открыть миссию</button><button class="dark" onclick="locate()">📍 Моё местоположение</button><button class="dark" onclick="share()">↗ Поделиться</button></div>`);initMap()}
+function initMap(){if(!window.L)return;map=L.map("map").setView([55.7535,37.6265],15);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);Q.forEach((q,i)=>{if(i<=S.m+1)L.marker([q.lat,q.lng]).addTo(map).bindPopup(`<b>${q.id}. ${q.p}</b>`)});if(me)L.marker([me.lat,me.lng]).addTo(map).bindPopup("Ты здесь")}
+function locate(){if(!navigator.geolocation)return toast("GPS недоступен");navigator.geolocation.getCurrentPosition(p=>{me={lat:p.coords.latitude,lng:p.coords.longitude};route()},()=>toast("Разреши GPS в Safari"),{enableHighAccuracy:true,timeout:10000})}
+function distance(){if(!me)return"GPS пока не включён.";let q=Q[S.m],d=dist(me.lat,me.lng,q.lat,q.lng);return d<1?`До точки ~${Math.round(d*1000)} м`:`До точки ~${d.toFixed(1)} км`}
+function dist(a,b,c,d){let R=6371,r=x=>x*Math.PI/180,x=r(c-a),y=r(d-b),v=Math.sin(x/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
+function mission(){if(S.m>=3&&!S.paid)return pay();let q=Q[S.m],img=q.img?`<figure><img src="${q.img}" onerror="this.parentNode.remove()"><figcaption>Фото: Wikimedia Commons</figcaption></figure>`:"";let a=`<small>МИССИЯ ${q.id}/10 · ${q.p}</small><h1>${q.t}</h1><div class="bar"><i style="width:${q.id*10}%"></i></div>${img}<div class="card"><p class="story">${q.s}</p><button class="dark" onclick="speak()">🔊 Послушать историю</button><p class="question">${q.q}</p>`;if(q.k==="quiz")a+=`<div class="answers">${q.a.map((x,i)=>`<button class="answer" onclick="ans(${i})">${String.fromCharCode(65+i)} — ${x}</button>`).join("")}</div>`;else if(q.k==="finish")a+=`<button onclick="finish()">Завершить</button>`;else a+=`<button onclick="complete()">Нашёл / Готово</button>`;a+=`</div><button class="dark" onclick="route()">← К карте</button>`;shell(a)}
+function speak(){let q=Q[S.m];if(!("speechSynthesis"in window))return toast("Аудио недоступно");speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(q.t+". "+q.s);u.lang="ru-RU";u.rate=.94;speechSynthesis.speak(u)}
+function ans(i){if(i!==Q[S.m].c)return toast("Не угадал — попробуй ещё раз");complete()}
+function complete(){let q=Q[S.m];S.x+=q.x;if(q.secret)S.sec++;S.m++;save();if(S.m===3)return pay();if(S.m>=10)return finish();route()}
+function pay(){shell(`<small>БЕСПЛАТНАЯ ЧАСТЬ</small><h1>3/10</h1><p>Ты собрал <b>${S.x} XP</b>. Дальше — полный маршрут.</p><div class="card center"><small>ПОЛНЫЙ МАРШРУТ</small><div class="price">249 ₽</div><p>Ещё 7 миссий · 2 секрета · финальный achievement.</p><button onclick="unlock()">Открыть маршрут</button><small>Тестовый режим: реальная оплата пока не подключена.</small></div>`)}
+function unlock(){S.paid=true;save();route()}
+function finish(){shell(`<section class="finish"><div class="trophy">🏆</div><small>ОХОТНИК ЗА МОСКВОЙ</small><h1>Маршрут<br>пройден.</h1><div class="result"><b>${S.x}</b><span>XP</span><b>${S.sec}/2</b><span>секретов</span></div><div class="card"><p>Ты прошёл все 10 миссий.</p><button onclick="shareResult()">↗ Поделиться результатом</button><button class="dark" onclick="home()">Новый маршрут</button></div></section>`)}
+async function share(){if(navigator.share)await navigator.share({title:"CITY QUEST",text:"Попробуй пеший квест по старой Москве.",url:location.href});else{await navigator.clipboard?.writeText(location.href);toast("Ссылка скопирована")}}
+async function shareResult(){let text=`Я прошёл CITY QUEST — ${S.x} XP, ${S.sec}/2 секретов!`;if(navigator.share)await navigator.share({title:"CITY QUEST",text,url:location.href});else{await navigator.clipboard?.writeText(text+" "+location.href);toast("Результат скопирован")}}
+home();if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
